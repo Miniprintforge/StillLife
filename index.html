@@ -40,7 +40,25 @@
         .btn { background: var(--primary); color: var(--bg); border: none; padding: 16px; width: 100%; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 16px; }
         .btn-lab { background: var(--accent); color: white; }
         .btn-nav-personalize { background: transparent; border: 1.5px solid var(--primary); color: var(--primary); padding: 8px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; }
-        .btn-test { background: transparent; border: 1px dashed var(--muted); color: var(--muted); font-size: 12px; padding: 8px; margin-top: 10px; width: 100%; border-radius: 8px; cursor: pointer; }
+        
+        /* TINY TEST BUTTON STYLE */
+        .btn-test { 
+            display: block; /* Change to 'none' to hide from customers */
+            background: rgba(255,255,255,0.05); 
+            border: 1px dashed var(--muted); 
+            color: var(--muted); 
+            font-size: 9px; 
+            padding: 4px; 
+            margin: 8px auto; 
+            width: fit-content; 
+            min-width: 120px;
+            border-radius: 4px; 
+            cursor: pointer; 
+            text-transform: uppercase;
+            opacity: 0.6;
+            transition: 0.2s;
+        }
+        .btn-test:hover { opacity: 1; border-color: var(--primary); color: var(--primary); }
 
         #cart-sidebar { position: fixed; right: 0; bottom: -100%; width: 100%; height: 85%; background: var(--surface); transition: 0.4s; z-index: 500; padding: 25px; border-radius: 25px 25px 0 0; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); overflow-y: auto; box-sizing: border-box; }
         #cart-sidebar.active { bottom: 0; }
@@ -74,22 +92,21 @@
         <span class="lab-badge">PERSONALIZATION LAB</span>
         <h2>Custom & Personalized Orders</h2>
         <p style="color:var(--muted); font-size: 14px; line-height: 1.5;">
-            Pick a base product to personalize or describe a completely new idea. I'll get back to you with a plan!
+            Pick a base product to personalize or describe a completely new idea.
         </p>
         
         <form id="customForm">
-            <label style="font-size: 12px; color: var(--primary);">1. Select Base Item</label>
             <select id="custBaseItem">
                 <option value="Custom Name Keychain">Custom Name Keychain</option>
                 <option value="Engraved Desk Plate">Engraved Desk Plate</option>
                 <option value="Personalized Wall Sign">Personalized Wall Sign</option>
                 <option value="Custom Luggage Tag">Custom Luggage Tag</option>
-                <option value="Photo Lithophane">Photo Lithophane (3D Image)</option>
+                <option value="Photo Lithophane">Photo Lithophane</option>
                 <option value="Custom Pet Tag">Custom Pet Tag</option>
                 <option value="QR Code Stand">QR Code Stand</option>
-                <option value="Custom Tool/Parts">Custom Tool or Spare Part</option>
-                <option value="Ornament/Gift">Custom Ornament or Gift</option>
-                <option value="Unique Idea">Other / Totally Unique Idea</option>
+                <option value="Custom Tool/Parts">Custom Tool or Part</option>
+                <option value="Ornament/Gift">Custom Ornament/Gift</option>
+                <option value="Unique Idea">Other / Unique Idea</option>
             </select>
 
             <input type="text" id="custName" placeholder="Your Name" required>
@@ -102,17 +119,15 @@
                 <option>Shiny Orange (BEST SELLER)</option>
             </select>
 
-            <textarea id="ideaDesc" rows="4" placeholder="Describe what you want (e.g. 'Keychains that says SAM', or describe your full custom idea here...)"></textarea>
+            <textarea id="ideaDesc" rows="4" placeholder="Description..."></textarea>
             
             <button type="button" class="btn btn-lab" onclick="submitToSheet('Request')">Submit Custom Request</button>
-            
-            <button type="button" class="btn-test" onclick="runTestSubmission()">🛠️ Run Connection Test</button>
+            <button type="button" class="btn-test" onclick="runTestSubmission('Lab Form')">🛠️ Test Lab Connection</button>
         </form>
     </section>
 
     <footer class="footer">
         <p>© 2026 MiniPrint Forge - Toronto, Canada</p>
-        <p>Support: printforge.stilllife@gmail.com</p>
     </footer>
 </div>
 
@@ -145,12 +160,14 @@
             <option value="0">In Person Meetup ($0.00)</option>
         </select>
         <textarea id="shipAddress" placeholder="Street Address, City, Postal Code"></textarea>
+        
         <div style="background: #0f172a; padding: 15px; border-radius: 10px; margin: 15px 0;">
             <div style="display:flex; justify-content:space-between"><span>Subtotal:</span><span id="items-cost">$0.00</span></div>
             <div style="display:flex; justify-content:space-between"><span>Shipping:</span><span id="ship-cost">$0.00</span></div>
             <div style="display:flex; justify-content:space-between; color:var(--primary); font-weight:bold; border-top:1px solid #334155; margin-top:5px; padding-top:5px;">
                 <span>Total CAD:</span><span id="final-total">$0.00</span>
             </div>
+            <button type="button" class="btn-test" onclick="runTestSubmission('Checkout Modal')">🛠️ Test Checkout Connection</button>
         </div>
         <div id="paypal-button-container"></div>
     </div>
@@ -165,36 +182,29 @@
         try {
             const response = await axios.get(SHEETDB_URL + '?sheet=Products');
             products = response.data.map(p => ({
-                ...p,
-                price: parseFloat(p.price) || 0,
+                ...p, price: parseFloat(p.price) || 0,
                 images: p.img ? p.img.split(',').map(s => s.trim()) : [],
                 currentImgIndex: 0
             }));
-
             const folders = ['All', ...new Set(products.map(p => p.folder).filter(f => f))];
             document.getElementById('folder-container').innerHTML = folders.map(f => `<button class="folder-btn" onclick="filterFolder('${f}', this)">${f}</button>`).join('');
-            
             renderProducts(products);
             initPayPal();
-        } catch (error) {
-            document.getElementById('product-grid').innerHTML = "Error loading forge items.";
-        }
+        } catch (error) { document.getElementById('product-grid').innerHTML = "Error loading forge items."; }
     }
 
     function renderProducts(data) {
         document.getElementById('product-grid').innerHTML = data.map((p, pIndex) => {
             const cleanID = p.name.replace(/\s/g, '');
-            const hasMultiple = p.images.length > 1;
-            
             return `
             <div class="card">
                 <div class="slider-container">
-                    ${hasMultiple ? `<button class="nav-arrow arrow-left" onclick="changeSlide(${pIndex}, -1)">&#10094;</button>` : ''}
+                    ${p.images.length > 1 ? `<button class="nav-arrow arrow-left" onclick="changeSlide(${pIndex}, -1)">&#10094;</button>` : ''}
                     <img id="img-${pIndex}" class="slider-img" src="${p.images[0] || 'https://via.placeholder.com/400'}" alt="${p.name}">
-                    ${hasMultiple ? `<button class="nav-arrow arrow-right" onclick="changeSlide(${pIndex}, 1)">&#10095;</button>` : ''}
+                    ${p.images.length > 1 ? `<button class="nav-arrow arrow-right" onclick="changeSlide(${pIndex}, 1)">&#10095;</button>` : ''}
                     <div class="img-counter" id="count-${pIndex}">${p.images.length > 0 ? '1 / ' + p.images.length : ''}</div>
                 </div>
-                <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                     <h3 style="margin:0">${p.name}</h3>
                     <span style="color:var(--primary); font-weight:bold">$${p.price.toFixed(2)}</span>
                 </div>
@@ -216,15 +226,13 @@
     function filterFolder(folder, btn) {
         document.querySelectorAll('.folder-btn').forEach(b => b.classList.remove('active'));
         if(btn) btn.classList.add('active');
-        const filtered = folder === 'All' ? products : products.filter(p => p.folder === folder);
-        renderProducts(filtered);
+        renderProducts(folder === 'All' ? products : products.filter(p => p.folder === folder));
     }
 
     function addToCart(name, price) {
         const color = document.getElementById(`color-${name.replace(/\s/g, '')}`).value;
         const existing = cart.find(i => i.name === name && i.color === color);
-        if(existing) { existing.qty++; } 
-        else { cart.push({ name, price, color, qty: 1 }); }
+        if(existing) { existing.qty++; } else { cart.push({ name, price, color, qty: 1 }); }
         updateCartUI();
         toggleCart();
     }
@@ -238,12 +246,12 @@
     function updateCartUI() {
         document.getElementById('cart-count').innerText = cart.reduce((sum, i) => sum + i.qty, 0);
         document.getElementById('cart-list').innerHTML = cart.map((item, index) => `
-            <div style="display:flex; justify-content:space-between; padding:15px 0; border-bottom:1px solid #334155;">
+            <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #334155;">
                 <div><strong>${item.name}</strong><br><small>${item.color}</small></div>
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <button class="folder-btn" style="padding:5px 12px;" onclick="changeQty(${index}, -1)">-</button>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <button class="folder-btn" style="padding:4px 10px;" onclick="changeQty(${index}, -1)">-</button>
                     <span>${item.qty}</span>
-                    <button class="folder-btn" style="padding:5px 12px;" onclick="changeQty(${index}, 1)">+</button>
+                    <button class="folder-btn" style="padding:4px 10px;" onclick="changeQty(${index}, 1)">+</button>
                 </div>
             </div>`).join('');
         updatePriceDisplay();
@@ -274,30 +282,24 @@
         };
         try {
             await axios.post(SHEETDB_URL, payload);
-            alert("Success! Check your spreadsheet/email.");
+            alert("Success! Check your spreadsheet.");
             if(type === 'Sale') { cart = []; updateCartUI(); closeCheckout(); toggleCart(); }
             if(type === 'Request') { document.getElementById('customForm').reset(); }
         } catch (e) { alert("Error sending request."); }
     }
 
-    // NEW TEST FUNCTION
-    async function runTestSubmission() {
-        const testPayload = {
-            Date: new Date().toLocaleString(),
-            Type: "SYSTEM_TEST",
-            Name: "TEST USER",
-            Email: "test@example.com",
-            Phone: "000-000-0000",
-            Details: "Testing the connection button.",
-            Items: "TEST ITEM",
-            Total: "$0.00"
-        };
+    async function runTestSubmission(source) {
         try {
-            await axios.post(SHEETDB_URL, testPayload);
-            alert("✅ Connection Successful! Check your Google Sheet.");
-        } catch (e) {
-            alert("❌ Connection Failed. Check your SheetDB URL.");
-        }
+            await axios.post(SHEETDB_URL, {
+                Date: new Date().toLocaleString(),
+                Type: "SYSTEM_TEST",
+                Name: "TEST USER",
+                Details: "Source: " + source,
+                Items: "TEST_CONNECTION",
+                Total: "$0.00"
+            });
+            alert("✅ Connection Successful (" + source + ")!");
+        } catch (e) { alert("❌ Connection Failed."); }
     }
 
     function initPayPal() {
