@@ -8,13 +8,15 @@
     <script src="https://www.paypal.com/sdk/js?client-id=AXoJbHSJNAJ0nV9J2siU7gzFDlO-MEUlxNEb74a9-2-tNRwmwUXMey6AZtuzBrysqRc7XhYSuvFD7blQ&currency=CAD"></script>
 
     <style>
-        :root { --primary: #fbbf24; --bg: #0f172a; --surface: #1e293b; --text: #f8fafc; --muted: #94a3b8; --danger: #ef4444; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 80px; -webkit-tap-highlight-color: transparent; }
+        :root { --primary: #fbbf24; --bg: #0f172a; --surface: #1e293b; --text: #f8fafc; --muted: #94a3b8; --danger: #ef4444; --accent: #6366f1; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 80px; -webkit-tap-highlight-color: transparent; scroll-behavior: smooth; }
         .top-bar { background: var(--primary); color: var(--bg); font-size: 12px; font-weight: bold; text-align: center; padding: 5px; }
         .top-bar a { color: inherit; text-decoration: none; }
+        
         nav { display: flex; justify-content: space-between; align-items: center; padding: 15px 5%; background: rgba(15, 23, 42, 0.98); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #334155; }
         .logo { font-weight: 800; color: var(--primary); font-size: 1.2rem; }
-        
+        .nav-right { display: flex; align-items: center; gap: 10px; }
+
         .folder-nav { display: flex; gap: 10px; padding: 15px; background: #161e2f; overflow-x: auto; scrollbar-width: none; border-bottom: 1px solid #334155; }
         .folder-btn { background: var(--surface); border: 1px solid #334155; color: white; padding: 10px 20px; border-radius: 25px; cursor: pointer; white-space: nowrap; font-size: 14px; }
         .folder-btn.active { background: var(--primary); color: var(--bg); font-weight: bold; }
@@ -23,7 +25,6 @@
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100%, 1fr)); gap: 20px; }
         @media (min-width: 600px) { .grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); } }
         
-        /* Image Slider Styles */
         .card { background: var(--surface); border-radius: 15px; padding: 15px; border: 1px solid #334155; position: relative; }
         .slider-container { position: relative; width: 100%; height: 250px; overflow: hidden; border-radius: 10px; margin-bottom: 15px; background: #000; }
         .slider-img { width: 100%; height: 100%; object-fit: contain; display: block; }
@@ -32,9 +33,15 @@
         .arrow-right { right: 5px; }
         .img-counter { position: absolute; bottom: 5px; right: 10px; background: rgba(0,0,0,0.6); padding: 2px 8px; border-radius: 10px; font-size: 10px; color: white; }
 
+        .custom-area { background: linear-gradient(145deg, #1e293b, #0f172a); border: 2px solid var(--accent); border-radius: 20px; padding: 25px; margin-top: 50px; box-shadow: 0 10px 30px rgba(99, 102, 241, 0.1); }
+        .lab-badge { background: var(--accent); color: white; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; display: inline-block; margin-bottom: 10px; }
+
         input, textarea, select { width: 100%; padding: 14px; margin: 10px 0; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white; font-size: 16px; box-sizing: border-box; }
         .btn { background: var(--primary); color: var(--bg); border: none; padding: 16px; width: 100%; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 16px; }
-        
+        .btn-lab { background: var(--accent); color: white; }
+        .btn-nav-personalize { background: transparent; border: 1.5px solid var(--primary); color: var(--primary); padding: 8px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; }
+        .btn-test { background: transparent; border: 1px dashed var(--muted); color: var(--muted); font-size: 12px; padding: 8px; margin-top: 10px; width: 100%; border-radius: 8px; cursor: pointer; }
+
         #cart-sidebar { position: fixed; right: 0; bottom: -100%; width: 100%; height: 85%; background: var(--surface); transition: 0.4s; z-index: 500; padding: 25px; border-radius: 25px 25px 0 0; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); overflow-y: auto; box-sizing: border-box; }
         #cart-sidebar.active { bottom: 0; }
         @media (min-width: 600px) { #cart-sidebar { top: 0; right: -400px; bottom: auto; width: 400px; height: 100%; border-radius: 0; } #cart-sidebar.active { right: 0; } }
@@ -52,7 +59,10 @@
 
 <nav>
     <div class="logo">MiniPrint Forge</div>
-    <div onclick="toggleCart()" style="cursor:pointer; font-weight: bold; background: #334155; padding: 8px 15px; border-radius: 20px;">🛒 <span id="cart-count">0</span></div>
+    <div class="nav-right">
+        <button class="btn-nav-personalize" onclick="document.getElementById('custom-section').scrollIntoView()">✨ Personalize</button>
+        <div onclick="toggleCart()" style="cursor:pointer; font-weight: bold; background: #334155; padding: 8px 15px; border-radius: 20px;">🛒 <span id="cart-count">0</span></div>
+    </div>
 </nav>
 
 <div class="folder-nav" id="folder-container"></div>
@@ -60,18 +70,43 @@
 <div class="container">
     <div class="grid" id="product-grid">Loading products...</div>
 
-    <section style="margin-top: 50px;">
-        <h2>Custom Request</h2>
+    <section class="custom-area" id="custom-section">
+        <span class="lab-badge">PERSONALIZATION LAB</span>
+        <h2>Custom & Personalized Orders</h2>
+        <p style="color:var(--muted); font-size: 14px; line-height: 1.5;">
+            Pick a base product to personalize or describe a completely new idea. I'll get back to you with a plan!
+        </p>
+        
         <form id="customForm">
-            <input type="text" id="custName" placeholder="Name" required>
+            <label style="font-size: 12px; color: var(--primary);">1. Select Base Item</label>
+            <select id="custBaseItem">
+                <option value="Custom Name Keychain">Custom Name Keychain</option>
+                <option value="Engraved Desk Plate">Engraved Desk Plate</option>
+                <option value="Personalized Wall Sign">Personalized Wall Sign</option>
+                <option value="Custom Luggage Tag">Custom Luggage Tag</option>
+                <option value="Photo Lithophane">Photo Lithophane (3D Image)</option>
+                <option value="Custom Pet Tag">Custom Pet Tag</option>
+                <option value="QR Code Stand">QR Code Stand</option>
+                <option value="Custom Tool/Parts">Custom Tool or Spare Part</option>
+                <option value="Ornament/Gift">Custom Ornament or Gift</option>
+                <option value="Unique Idea">Other / Totally Unique Idea</option>
+            </select>
+
+            <input type="text" id="custName" placeholder="Your Name" required>
             <input type="email" id="custEmail" placeholder="Email Address" required>
             <input type="tel" id="custPhone" placeholder="Phone Number" required>
+            
             <select id="custColor">
                 <option>Blue</option><option>Yellow</option><option>White</option>
                 <option>Black</option><option>Red-Green (Dual)</option><option>Gold-Silver (Dual)</option>
+                <option>Shiny Orange (BEST SELLER)</option>
             </select>
-            <textarea id="ideaDesc" rows="3" placeholder="Explain your idea or link..."></textarea>
-            <button type="button" class="btn" onclick="submitToSheet('Request')">Submit Request</button>
+
+            <textarea id="ideaDesc" rows="4" placeholder="Describe what you want (e.g. 'Keychains that says SAM', or describe your full custom idea here...)"></textarea>
+            
+            <button type="button" class="btn btn-lab" onclick="submitToSheet('Request')">Submit Custom Request</button>
+            
+            <button type="button" class="btn-test" onclick="runTestSubmission()">🛠️ Run Connection Test</button>
         </form>
     </section>
 
@@ -131,19 +166,18 @@
             const response = await axios.get(SHEETDB_URL + '?sheet=Products');
             products = response.data.map(p => ({
                 ...p,
-                price: parseFloat(p.price),
-                // Split image links by comma and clean up whitespace
+                price: parseFloat(p.price) || 0,
                 images: p.img ? p.img.split(',').map(s => s.trim()) : [],
                 currentImgIndex: 0
             }));
 
-            const folders = ['All', ...new Set(products.map(p => p.folder))];
+            const folders = ['All', ...new Set(products.map(p => p.folder).filter(f => f))];
             document.getElementById('folder-container').innerHTML = folders.map(f => `<button class="folder-btn" onclick="filterFolder('${f}', this)">${f}</button>`).join('');
             
             renderProducts(products);
             initPayPal();
         } catch (error) {
-            document.getElementById('product-grid').innerHTML = "Error loading products.";
+            document.getElementById('product-grid').innerHTML = "Error loading forge items.";
         }
     }
 
@@ -174,11 +208,7 @@
 
     function changeSlide(pIndex, direction) {
         const p = products[pIndex];
-        p.currentImgIndex += direction;
-        
-        if (p.currentImgIndex >= p.images.length) p.currentImgIndex = 0;
-        if (p.currentImgIndex < 0) p.currentImgIndex = p.images.length - 1;
-        
+        p.currentImgIndex = (p.currentImgIndex + direction + p.images.length) % p.images.length;
         document.getElementById(`img-${pIndex}`).src = p.images[p.currentImgIndex];
         document.getElementById(`count-${pIndex}`).innerText = `${p.currentImgIndex + 1} / ${p.images.length}`;
     }
@@ -238,15 +268,36 @@
             Name: type === 'Request' ? document.getElementById('custName').value : document.getElementById('shipName').value,
             Email: type === 'Request' ? document.getElementById('custEmail').value : document.getElementById('shipEmail').value,
             Phone: type === 'Request' ? document.getElementById('custPhone').value : document.getElementById('shipPhone').value,
-            Details: type === 'Request' ? document.getElementById('ideaDesc').value : document.getElementById('shipAddress').value,
-            Items: cart.map(i => `${i.qty}x ${i.name}(${i.color})`).join(", "),
+            Details: type === 'Request' ? "Base: " + document.getElementById('custBaseItem').value + " | Info: " + document.getElementById('ideaDesc').value : document.getElementById('shipAddress').value,
+            Items: type === 'Request' ? "CUSTOM PERSONALIZATION" : cart.map(i => `${i.qty}x ${i.name}(${i.color})`).join(", "),
             Total: document.getElementById('final-total').innerText
         };
         try {
             await axios.post(SHEETDB_URL, payload);
-            alert("Success! Check your email soon.");
+            alert("Success! Check your spreadsheet/email.");
             if(type === 'Sale') { cart = []; updateCartUI(); closeCheckout(); toggleCart(); }
-        } catch (e) { alert("Database Error"); }
+            if(type === 'Request') { document.getElementById('customForm').reset(); }
+        } catch (e) { alert("Error sending request."); }
+    }
+
+    // NEW TEST FUNCTION
+    async function runTestSubmission() {
+        const testPayload = {
+            Date: new Date().toLocaleString(),
+            Type: "SYSTEM_TEST",
+            Name: "TEST USER",
+            Email: "test@example.com",
+            Phone: "000-000-0000",
+            Details: "Testing the connection button.",
+            Items: "TEST ITEM",
+            Total: "$0.00"
+        };
+        try {
+            await axios.post(SHEETDB_URL, testPayload);
+            alert("✅ Connection Successful! Check your Google Sheet.");
+        } catch (e) {
+            alert("❌ Connection Failed. Check your SheetDB URL.");
+        }
     }
 
     function initPayPal() {
