@@ -25,6 +25,9 @@
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100%, 1fr)); gap: 20px; }
         @media (min-width: 600px) { .grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); } }
         
+        /* NEW: Personalization Banner */
+        .personalization-notice { background: rgba(99, 102, 241, 0.1); border: 1px solid var(--accent); color: var(--accent); padding: 12px; border-radius: 12px; margin-bottom: 20px; font-size: 14px; text-align: center; font-weight: 600; }
+
         .card { background: var(--surface); border-radius: 15px; padding: 15px; border: 1px solid #334155; position: relative; }
         .slider-container { position: relative; width: 100%; height: 250px; overflow: hidden; border-radius: 10px; margin-bottom: 15px; background: #000; }
         .slider-img { width: 100%; height: 100%; object-fit: contain; display: block; }
@@ -41,24 +44,7 @@
         .btn-lab { background: var(--accent); color: white; }
         .btn-nav-personalize { background: transparent; border: 1.5px solid var(--primary); color: var(--primary); padding: 8px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; }
         
-        /* TINY TEST BUTTON STYLE */
-        .btn-test { 
-            display: block; /* Change to 'none' to hide from customers */
-            background: rgba(255,255,255,0.05); 
-            border: 1px dashed var(--muted); 
-            color: var(--muted); 
-            font-size: 9px; 
-            padding: 4px; 
-            margin: 8px auto; 
-            width: fit-content; 
-            min-width: 120px;
-            border-radius: 4px; 
-            cursor: pointer; 
-            text-transform: uppercase;
-            opacity: 0.6;
-            transition: 0.2s;
-        }
-        .btn-test:hover { opacity: 1; border-color: var(--primary); color: var(--primary); }
+        .btn-test { display: block; background: rgba(255,255,255,0.05); border: 1px dashed var(--muted); color: var(--muted); font-size: 9px; padding: 4px; margin: 8px auto; width: fit-content; min-width: 120px; border-radius: 4px; cursor: pointer; text-transform: uppercase; opacity: 0.6; }
 
         #cart-sidebar { position: fixed; right: 0; bottom: -100%; width: 100%; height: 85%; background: var(--surface); transition: 0.4s; z-index: 500; padding: 25px; border-radius: 25px 25px 0 0; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); overflow-y: auto; box-sizing: border-box; }
         #cart-sidebar.active { bottom: 0; }
@@ -86,6 +72,10 @@
 <div class="folder-nav" id="folder-container"></div>
 
 <div class="container">
+    <div class="personalization-notice">
+        ✨ Personalization is available for <b>EVERY</b> item below! Add details at checkout.
+    </div>
+
     <div class="grid" id="product-grid">Loading products...</div>
 
     <section class="custom-area" id="custom-section">
@@ -108,19 +98,15 @@
                 <option value="Ornament/Gift">Custom Ornament/Gift</option>
                 <option value="Unique Idea">Other / Unique Idea</option>
             </select>
-
             <input type="text" id="custName" placeholder="Your Name" required>
             <input type="email" id="custEmail" placeholder="Email Address" required>
             <input type="tel" id="custPhone" placeholder="Phone Number" required>
-            
             <select id="custColor">
                 <option>Blue</option><option>Yellow</option><option>White</option>
                 <option>Black</option><option>Red-Green (Dual)</option><option>Gold-Silver (Dual)</option>
                 <option>Shiny Orange (BEST SELLER)</option>
             </select>
-
-            <textarea id="ideaDesc" rows="4" placeholder="Description..."></textarea>
-            
+            <textarea id="ideaDesc" rows="4" placeholder="Description of your request..."></textarea>
             <button type="button" class="btn btn-lab" onclick="submitToSheet('Request')">Submit Custom Request</button>
             <button type="button" class="btn-test" onclick="runTestSubmission('Lab Form')">🛠️ Test Lab Connection</button>
         </form>
@@ -129,17 +115,6 @@
     <footer class="footer">
         <p>© 2026 MiniPrint Forge - Toronto, Canada</p>
     </footer>
-</div>
-
-<div id="cart-sidebar">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h3>Your Cart</h3>
-        <button onclick="toggleCart()" style="background:none; border:none; color:white; font-size:24px;">×</button>
-    </div>
-    <div id="cart-list"></div>
-    <div style="margin-top: 20px; border-top: 1px solid #334155; padding-top: 15px;">
-        <button class="btn" onclick="openCheckout()">Go to Checkout</button>
-    </div>
 </div>
 
 <div id="checkout-modal">
@@ -161,6 +136,9 @@
         </select>
         <textarea id="shipAddress" placeholder="Street Address, City, Postal Code"></textarea>
         
+        <label style="font-size: 12px; color: var(--primary); font-weight: bold; margin-top: 10px; display: block;">PERSONALIZATION REQUESTS</label>
+        <textarea id="checkoutPersonalization" placeholder="e.g. For the car keychain, I want a 2024 Honda Civic model. For the sign, put the name 'Alex'." rows="3"></textarea>
+        
         <div style="background: #0f172a; padding: 15px; border-radius: 10px; margin: 15px 0;">
             <div style="display:flex; justify-content:space-between"><span>Subtotal:</span><span id="items-cost">$0.00</span></div>
             <div style="display:flex; justify-content:space-between"><span>Shipping:</span><span id="ship-cost">$0.00</span></div>
@@ -170,6 +148,17 @@
             <button type="button" class="btn-test" onclick="runTestSubmission('Checkout Modal')">🛠️ Test Checkout Connection</button>
         </div>
         <div id="paypal-button-container"></div>
+    </div>
+</div>
+
+<div id="cart-sidebar">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h3>Your Cart</h3>
+        <button onclick="toggleCart()" style="background:none; border:none; color:white; font-size:24px;">×</button>
+    </div>
+    <div id="cart-list"></div>
+    <div style="margin-top: 20px; border-top: 1px solid #334155; padding-top: 15px;">
+        <button class="btn" onclick="openCheckout()">Go to Checkout</button>
     </div>
 </div>
 
@@ -276,7 +265,7 @@
             Name: type === 'Request' ? document.getElementById('custName').value : document.getElementById('shipName').value,
             Email: type === 'Request' ? document.getElementById('custEmail').value : document.getElementById('shipEmail').value,
             Phone: type === 'Request' ? document.getElementById('custPhone').value : document.getElementById('shipPhone').value,
-            Details: type === 'Request' ? "Base: " + document.getElementById('custBaseItem').value + " | Info: " + document.getElementById('ideaDesc').value : document.getElementById('shipAddress').value,
+            Details: type === 'Request' ? "Base: " + document.getElementById('custBaseItem').value + " | Info: " + document.getElementById('ideaDesc').value : "Address: " + document.getElementById('shipAddress').value + " | Customization: " + document.getElementById('checkoutPersonalization').value,
             Items: type === 'Request' ? "CUSTOM PERSONALIZATION" : cart.map(i => `${i.qty}x ${i.name}(${i.color})`).join(", "),
             Total: document.getElementById('final-total').innerText
         };
