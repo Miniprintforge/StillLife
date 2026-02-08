@@ -39,6 +39,11 @@
         @media (min-width: 600px) { #cart-sidebar { top: 0; right: -400px; bottom: auto; width: 400px; height: 100%; border-radius: 0; } #cart-sidebar.active { right: 0; } }
         #checkout-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; justify-content: center; align-items: flex-start; z-index: 1000; overflow-y: auto; padding: 20px 0; }
         .modal-content { background: var(--surface); padding: 25px; border-radius: 20px; width: 90%; max-width: 500px; }
+        
+        /* New styling for file input */
+        .file-input-container { margin: 10px 0; }
+        .file-label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px; font-weight: bold; }
+        input[type="file"] { border: 1px dashed var(--accent); padding: 10px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -66,12 +71,19 @@
             <select id="custBaseItem">
                 <option value="Custom Keychain">Custom Keychain</option>
                 <option value="Engraved Item">Engraved Item</option>
+                <option value="3D Print Request">3D Print Request (Upload Below)</option>
                 <option value="Unique Idea">Other Idea</option>
             </select>
             <input type="text" id="custName" placeholder="Name" required>
             <input type="email" id="custEmail" placeholder="Email" required>
             <input type="tel" id="custPhone" placeholder="Phone" required>
-            <textarea id="ideaDesc" rows="4" placeholder="Describe your request..."></textarea>
+            
+            <div class="file-input-container">
+                <label class="file-label">UPLOAD MODEL (.STL or .OBJ)</label>
+                <input type="file" id="custFile" accept=".stl,.obj">
+            </div>
+
+            <textarea id="ideaDesc" rows="4" placeholder="Describe your request (colors, size, etc)..."></textarea>
             <button type="button" class="btn btn-lab" onclick="submitToSheet('Request')">Submit Request</button>
         </form>
     </section>
@@ -128,7 +140,6 @@
                 currentImgIndex: 0
             }));
             
-            // FIXED: Render folder navigation buttons
             const folders = ['All', ...new Set(products.map(p => p.folder).filter(f => f))];
             document.getElementById('folder-container').innerHTML = folders.map(f => 
                 `<button class="folder-btn ${f==='All'?'active':''}" onclick="filterFolder('${f}', this)">${f}</button>`
@@ -222,27 +233,33 @@
                 onApprove: (data, actions) => {
                     return actions.order.capture().then(() => { submitToSheet('Sale'); alert("Order Placed!"); });
                 },
-                onError: (err) => { alert("PayPal Error. Check Client ID."); }
+                onError: (err) => { 
+                    console.error(err);
+                    alert("PayPal Error. Ensure your Client ID is correct and you aren't using a Sandbox account on a Live site."); 
+                }
             }).render('#paypal-button-container');
         }, 800);
     }
 
     async function submitToSheet(type) {
+        const fileInput = document.getElementById('custFile');
+        const fileName = fileInput.files.length > 0 ? fileInput.files[0].name : "No file uploaded";
+
         const payload = {
             Date: new Date().toLocaleString(),
             Type: type,
             Name: type === 'Request' ? document.getElementById('custName').value : document.getElementById('shipName').value,
             Email: type === 'Request' ? document.getElementById('custEmail').value : document.getElementById('shipEmail').value,
             Phone: type === 'Request' ? document.getElementById('custPhone').value : document.getElementById('shipPhone').value,
-            Details: type === 'Request' ? document.getElementById('ideaDesc').value : "Addr: " + document.getElementById('shipAddress').value + " | Note: " + document.getElementById('checkoutPersonalization').value,
-            Items: type === 'Request' ? "CUSTOM" : cart.map(i => `${i.qty}x ${i.name}(${i.color})`).join(", "),
+            Details: type === 'Request' ? `File: ${fileName} | Note: ${document.getElementById('ideaDesc').value}` : "Addr: " + document.getElementById('shipAddress').value + " | Note: " + document.getElementById('checkoutPersonalization').value,
+            Items: type === 'Request' ? "CUSTOM REQUEST" : cart.map(i => `${i.qty}x ${i.name}(${i.color})`).join(", "),
             Total: document.getElementById('final-total').innerText
         };
         try {
             await axios.post(SHEETDB_URL, payload);
             if(type === 'Sale') { cart = []; updateCartUI(); closeCheckout(); toggleCart(); }
-            else { alert("Sent!"); document.getElementById('customForm').reset(); }
-        } catch (e) { alert("Database Error."); }
+            else { alert("Request Sent! We will contact you soon."); document.getElementById('customForm').reset(); }
+        } catch (e) { alert("Database Error. Check your SheetDB URL."); }
     }
 
     init();
